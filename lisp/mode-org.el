@@ -24,15 +24,19 @@
 
   (dolist (face '((org-document-title . 1.4)
                   (org-level-1        . 1.2)
-                  (org-level-2        . 1.2)
-                  (org-level-3        . 1.0)
+                  (org-level-2        . 1.2)))
+    (set-face-attribute (car face) nil
+		                :weight 'bold
+		                :height (cdr face)))
+
+  (dolist (face '((org-level-3        . 1.0)
                   (org-level-4        . 1.0)
                   (org-level-5        . 1.0)
                   (org-level-6        . 1.0)
                   (org-level-7        . 1.0)
                   (org-level-8        . 1.0)))
     (set-face-attribute (car face) nil
-		                :weight 'bold
+		                :weight 'semi-bold
 		                :height (cdr face)))
 
   (setq-default org-ellipsis "…")
@@ -49,7 +53,7 @@
   :init
   (setq
    org-directory                     "~/org"
-   org-default-notes-file            "~/org/etc.org"
+   org-default-notes-file            "~/org/home.org"
    org-auto-align-tags                nil
    org-catch-invisible-edits          'show-and-error
    org-hide-emphasis-markers          t
@@ -59,7 +63,9 @@
    org-cycle-separator-lines          1
    org-indent-indentation-per-level   3
    org-insert-heading-respect-content t
-   org-blank-before-new-entry '((plain-list-item . nil))
+   org-cycle-separator-lines          1
+   org-blank-before-new-entry '((plain-list-item . nil)
+                                (heading . nil))
    org-todo-keywords '((sequence "TODO(t)"
                                  "PROJ(p)"
                                  "HOLD(h@/!)"
@@ -136,8 +142,8 @@
     :defer t
     :config
     (setq org-capture-templates
-	      '(("i"  "Item" entry (file+datetree "~/org/etc.org" "Journal") "*  %?\n")
-            ("t"  "Task" entry (file+datetree "~/org/etc.org" "Journal") "*  TODO %?\n")
+	      '(("i"  "Item" entry (file+datetree "~/org/home.org" "Journal") "*  %?\n")
+            ("t"  "Task" entry (file+datetree "~/org/home.org" "Journal") "*  TODO %?\n")
 
             ("c"  "ctrl")
             ("ci" "Item" entry (file+datetree "~/org/ctrl.org" "Journal") "*  %?\n")
@@ -155,6 +161,8 @@
     :straight t
     :hook (org-mode . org-modern-mode)
     :config
+    (custom-set-faces
+     '(org-modern-symbol ((t :inherit fixed-pitch))))
     (setq org-modern-star 'replace
 	  org-modern-replace-stars (concat " " " " "◉" "○" "›" "»" "⁖" "⁘" "⁙" "•"))))
 
