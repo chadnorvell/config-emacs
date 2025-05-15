@@ -102,7 +102,6 @@
 
 (use-package flycheck
   :straight t
-  :hook (prog-mode . flycheck-mode)
   :config
   (defun cxn/toggle-flycheck-mode ()
     "Toggle Flycheck mode in the current buffer."
