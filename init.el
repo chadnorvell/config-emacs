@@ -7,6 +7,7 @@
 ;; Don't store custom-set-* here.
 (setq custom-file (concat user-emacs-directory "/custom.el"))
 
+(require 'locals)
 (require 'core-prelude)
 (require 'core-functions)
 (require 'core-keybindings)

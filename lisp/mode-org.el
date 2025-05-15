@@ -3,6 +3,45 @@
 ;;; Commentary:
 
 ;;; Code:
+(defvar cxn/org-root "org"
+  "The actual path to the root directory for `org-mode' files.
+
+Evaluated relative to the home directory.
+
+If you use a symlink to your root directory, set this to the target path.")
+
+(defvar cxn/org-root-alias "org"
+  "The aliased path to the root directory for `org-mode' files.
+
+Evaluated relative to the home directory.
+
+This does not need to be set to a value other than the default in most cases.")
+
+(defvar cxn/org-root-alias-set? nil
+  "Whether the `org-mode' root directory abbreviation has been applied.
+
+This prevents redundant entries being added to `directory-abbrev-alist'")
+
+(defun cxn/apply-abbrev-org-root ()
+  "Create a directory abbreviation of `cxn/org-root-alias' for `cxn/org-root'."
+  (unless cxn/org-root-alias-set?
+    (push
+     `(,(concat "^~/" cxn/org-root) . ,(concat "~/" cxn/org-root-alias))
+     directory-abbrev-alist)
+    (setq cxn/org-root-alias-set? t)))
+
+(defun cxn/abbrev-org-path (path)
+  "Return the abbreviated path to the `org-mode' file in PATH."
+  (replace-regexp-in-string cxn/org-root cxn/org-root-alias path))
+
+(defun cxn/apply-org-file-truename-advice ()
+  "Modify `file-truename' to use the abbreviated `org-mode' path."
+  (advice-add #'file-truename :filter-return #'cxn/abbrev-org-path))
+
+(defun cxn/org-path (subpath)
+  "Return the actual path to an `org-mode' file at SUBPATH."
+  (concat "~/" cxn/org-root "/" subpath))
+
 (progn
   (defmacro +org-emphasize (fname char)
     "Make function for setting the emphasis in `org-mode'."
@@ -52,8 +91,8 @@
 (use-package org
   :init
   (setq
-   org-directory                     "~/org"
-   org-default-notes-file            "~/org/home.org"
+   org-directory                      cxn/org-root-alias
+   org-default-notes-file             (cxn/org-path "home.org")
    org-auto-align-tags                nil
    org-catch-invisible-edits          'show-and-error
    org-hide-emphasis-markers          t
@@ -81,6 +120,9 @@
   ;; Set preferred buffer styles.
   (org-mode . set-org-styles)
   (org-mode . (lambda () (setq-local line-spacing 0.2)))
+  ;; If the org dir is a symlink, show files in the symlink root, not the actual root.
+  (org-mode . cxn/apply-abbrev-org-root)
+  (org-mode . cxn/apply-org-file-truename-advice)
 
   :general
   ;; Super keybindings
@@ -142,12 +184,12 @@
     :defer t
     :config
     (setq org-capture-templates
-	      '(("i"  "Item" entry (file+datetree "~/org/home.org" "Journal") "*  %?\n")
-            ("t"  "Task" entry (file+datetree "~/org/home.org" "Journal") "*  TODO %?\n")
+	      `(("i"  "Item" entry (file+datetree ,(cxn/org-path "home.org") "Journal") "*  %?\n")
+            ("t"  "Task" entry (file+datetree ,(cxn/org-path "home.org") "Journal") "*  TODO %?\n")
 
             ("c"  "ctrl")
-            ("ci" "Item" entry (file+datetree "~/org/ctrl.org" "Journal") "*  %?\n")
-            ("ct" "Task" entry (file+datetree "~/org/ctrl.org" "Journal") "*  TODO %?\n"))))
+            ("ci" "Item" entry (file+datetree ,(cxn/org-path "ctrl.org") "Journal") "*  %?\n")
+            ("ct" "Task" entry (file+datetree ,(cxn/org-path "ctrl.org") "Journal") "*  TODO %?\n"))))
 
   (use-package evil-org
     :straight t
