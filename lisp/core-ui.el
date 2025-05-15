@@ -51,7 +51,7 @@
   :straight t)
 
 (setq fixed-family "Iosevka")
-(setq variable-family "Iosevka Aile")
+(setq variable-family "Ubuntu")
 
 ;; Set the default (monospace) font via set-frame-font — this preserves fallback support
 (set-frame-font (format "%s-14" fixed-family) t t)
