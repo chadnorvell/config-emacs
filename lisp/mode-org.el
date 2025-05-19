@@ -3,6 +3,9 @@
 ;;; Commentary:
 
 ;;; Code:
+(defvar cxn/home-dir "~"
+  "The path string indicating the home directory.")
+
 (defvar cxn/org-root "org"
   "The actual path to the root directory for `org-mode' files.
 
@@ -10,24 +13,30 @@ Evaluated relative to the home directory.
 
 If you use a symlink to your root directory, set this to the target path.")
 
-(defvar cxn/org-root-alias "org"
+(defvar cxn/org-root-alias nil
   "The aliased path to the root directory for `org-mode' files.
 
 Evaluated relative to the home directory.
 
-This does not need to be set to a value other than the default in most cases.")
+If you use a symlink to your root directory, set this to the link path.")
 
 (defvar cxn/org-root-alias-set? nil
   "Whether the `org-mode' root directory abbreviation has been applied.
 
 This prevents redundant entries being added to `directory-abbrev-alist'")
 
+(defun cxn/should-apply-abbrev-org-root? ()
+  "Whether an `org-mode' directory abbreviation should be applied."
+  (and cxn/org-root-alias (not cxn/org-root-alias-set?)))
+
 (defun cxn/apply-abbrev-org-root ()
-  "Create a directory abbreviation of `cxn/org-root-alias' for `cxn/org-root'."
-  (unless cxn/org-root-alias-set?
+  "Create directory abbreviations of `cxn/org-root-alias' for `cxn/org-root'."
+  (if (cxn/should-apply-abbrev-org-root?)
     (push
-     `(,(concat "^~/" cxn/org-root) . ,(concat "~/" cxn/org-root-alias))
-     directory-abbrev-alist)
+      (cons
+        (concat "^" (file-name-as-directory cxn/home-dir) cxn/org-root)
+        (concat (file-name-as-directory cxn/home-dir) cxn/org-root-alias))
+      directory-abbrev-alist)
     (setq cxn/org-root-alias-set? t)))
 
 (defun cxn/abbrev-org-path (path)
@@ -36,11 +45,15 @@ This prevents redundant entries being added to `directory-abbrev-alist'")
 
 (defun cxn/apply-org-file-truename-advice ()
   "Modify `file-truename' to use the abbreviated `org-mode' path."
-  (advice-add #'file-truename :filter-return #'cxn/abbrev-org-path))
+  (if cxn/org-root-alias
+      (advice-add #'file-truename :filter-return #'cxn/abbrev-org-path)))
 
 (defun cxn/org-path (subpath)
   "Return the actual path to an `org-mode' file at SUBPATH."
-  (concat "~/" cxn/org-root "/" subpath))
+  (concat
+    (file-name-as-directory cxn/home-dir)
+    (file-name-as-directory cxn/org-root)
+    subpath))
 
 (progn
   (defmacro +org-emphasize (fname char)
